@@ -1,0 +1,82 @@
+- debug: msg=" Version is {{ansible_distribution_major_version}}"
+- debug: msg=" OS Group is {{ansible_os_family}}"
+
+- name: Include vars centos7
+  include_vars:
+    file: "vars/vars_prod_cent{{ansible_distribution_major_version}}.yml"
+
+- block:
+  - name: Create Apache Group
+    group:
+      name: "{{apache_default_Group}}"
+      gid: "{{apache_default_GroupID}}"
+  
+  - name: Create Apache User
+    user:
+      name: "{{apache_default_User}}"
+      uid: "{{apache_default_UserID}}"
+      shell: "/sbin/nologin"
+      home: "{{apache_default_home}}"
+
+- name: Install Apache
+  yum: name=httpd 
+       state=present
+  register: apache_exists
+
+- name: Put httpd.conf
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+    owner: "{{apache_default_User}}"
+    group: "{{apache_default_Group}}"
+    mode: 0644
+  notify:
+  - restart httpd
+
+- name: Create vhost Documentroot
+  file:
+    path: "{{item.apache_vhost_DocumentRoot}}"
+    state: directory
+    owner: "{{apache_default_User}}"
+    group: "{{apache_default_Group}}"
+    mode: 0644
+  with_items: "{{apache_vhosts}}"
+  
+- name: Create vhost CGI dir
+  file:
+    path: "{{item.apache_vhost_CGI_Path}}"
+    state: directory
+    owner: "{{apache_default_User}}"
+    group: "{{apache_default_Group}}"
+    mode: 0644
+  with_items: "{{apache_vhosts}}"
+
+- name: Create vhost Error log
+  copy:
+    dest: "{{apache_default_ServerRoot}}/{{item.apache_vhost_ErrorLog}}"
+    content: ""
+    force: no
+  with_items: "{{apache_vhosts}}"
+
+- name: Create vhost Access Log
+  copy:
+    dest: "{{apache_default_ServerRoot}}/{{item.apache_vhost_CustomLog}}"
+    content: ""
+    force: no
+  with_items: "{{apache_vhosts}}"
+
+- name: Put vhost.conf
+  template:
+    src: vhost.conf.j2
+    dest: "/etc/httpd/conf.d/vhost-{{item.apache_vhost_servername}}.conf"
+    owner: "{{apache_default_User}}"
+    group: "{{apache_default_Group}}"
+    mode: 0644
+  with_items: "{{apache_vhosts}}"
+  notify:
+  - restart httpd
+
+- name: Start httpd Service
+  service: name=httpd 
+           state=started 
+           enabled=yes

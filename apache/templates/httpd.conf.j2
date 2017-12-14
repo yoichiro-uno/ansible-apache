@@ -1,0 +1,36 @@
+Include conf.modules.d/*.conf
+User {{apache_default_User}}
+Group {{apache_default_Group}}
+ServerName {{ansible_hostname}}
+Listen {{apache_default_listen_port}}
+ServerAdmin {{apache_default_ServerAdmin}}
+ServerRoot {{apache_default_ServerRoot}}
+DocumentRoot {{apache_default_DocumentRoot}}
+<Directory />
+    AllowOverride none
+    Require all denied
+</Directory>
+<Directory "{{apache_default_BaseDir}}">
+    AllowOverride None
+    Require all granted
+</Directory>
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+<Files ".ht*">
+    Require all denied
+</Files>
+<IfModule mime_module>
+    TypesConfig /etc/mime.types
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+    AddType text/html .shtml
+    AddOutputFilter INCLUDES .shtml
+</IfModule>
+<IfModule mime_magic_module>
+    MIMEMagicFile conf/magic
+</IfModule>
+EnableSendfile on
+IncludeOptional conf.d/*.conf
+ServerSignature Off
+ServerTokens Prod

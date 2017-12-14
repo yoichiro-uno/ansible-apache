@@ -1,0 +1,27 @@
+<VirtualHost {{ item.apache_vhost_listen_ip }}:{{ item.apache_vhost_listen_port }}>
+ServerName {{item.apache_vhost_servername}}
+<Directory "{{item.apache_vhost_DocumentRoot}}">
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+ErrorLog "{{item.apache_vhost_ErrorLog}}"
+LogLevel {{item.apache_vhost_LogLevel}}
+<IfModule log_config_module>
+    LogFormat "{{item.apache_vhost_LogFormat_combined}}" combined
+    LogFormat "{{item.apache_vhost_LogFormat_common}}" common
+    <IfModule logio_module>
+      LogFormat "{{item.apache_vhost_LogFormat_combinedio}}" combinedio
+    </IfModule>
+    CustomLog "{{item.apache_vhost_CustomLog}}" combined
+</IfModule>
+<IfModule alias_module>
+    ScriptAlias {{item.apache_vhost_CGI_Ailias}} "{{item.apache_vhost_CGI_Path}}"
+</IfModule>
+<Directory "{{item.apache_vhost_CGI_Path}}">
+    AllowOverride None
+    Options None
+    Require all granted
+</Directory>
+AddDefaultCharset {{item.apache_vhost_AddDefaultCharset}}
+</VirtualHost>

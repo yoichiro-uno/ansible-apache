@@ -1,0 +1,7 @@
+- name: Create Apache Server
+  hosts: webserver  
+  become: yes
+  roles:
+#    - common
+    - apache
+  
