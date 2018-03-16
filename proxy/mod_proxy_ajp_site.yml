@@ -1,0 +1,6 @@
+---
+- name: Set Up mod_proxy_ajp
+  hosts: all
+  become: yes
+  roles:
+    - mod_proxy_ajp

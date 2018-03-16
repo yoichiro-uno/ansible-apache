@@ -1,0 +1,65 @@
+---
+- name: Create http-proxy.conf
+  template: 
+    src: http-proxy.conf.j2
+    dest: "/etc/httpd/conf.d/http-proxy.conf"
+    owner: "{{ apache_default_User }}"
+    group: "{{ apache_default_Group }}"
+    mode: "0644"
+  notify:
+  - restart httpd
+
+- name: Insert proxypasses to vhost confs
+  lineinfile:
+    path: "/etc/httpd/conf.d/vhost-{{item.0.apache_vhost_servername}}.conf"
+    insertbefore: '^</VirtualHost>$'
+    line: "{{item.1}}"
+  with_subelements:
+    - "{{ apache_vhosts }}"
+    - apache_vhost_proxy
+    - flags:
+        skip_missing: True
+  notify:
+    - restart httpd
+
+- name: Create proxy dir
+  file:
+    path: "{{apache_proxy_conf_dir}}"
+    state: directory
+    owner: "{{apache_default_User}}"
+    group: "{{apache_default_Group}}"
+    mode: 0644
+  with_items: "{{apache_vhosts}}"
+
+- name: Create apache Proxy list
+  template:
+    src: "proxy_balancer_list.conf.j2" 
+    dest: "{{apache_proxy_conf_dir}}/proxylist_{{item.proxy_balancer_name}}.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: no
+  with_items: "{{ apache_proxy_balancers }}"
+  notify:
+    - restart httpd
+
+- name: List Up Proxy Backends
+  lineinfile:
+    path: "{{apache_proxy_conf_dir}}/proxylist_{{item.0.proxy_balancer_name}}.conf"
+    insertbefore: '^</Proxy>$'
+    line: "BalancerMember {{item.1}}"
+  with_subelements:
+    - "{{ apache_proxy_balancers }}"
+    - proxy_members
+    - flags:
+        skip_missing: True
+  notify:
+    - restart httpd
+
+- name: Insert Proxylist info to httpd.conf
+  lineinfile:
+    path: "/etc/httpd/conf/httpd.conf"
+    line: "IncludeOptional {{apache_proxy_conf_dir}}/*.conf"
+    state: present
+  notify:
+    - restart httpd
