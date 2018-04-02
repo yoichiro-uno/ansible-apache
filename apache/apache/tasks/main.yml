@@ -55,10 +55,6 @@
   file:
     path: "{{apache_default_ServerRoot}}/{{item.apache_vhost_ErrorLog}}"
     state: touch
-#  copy:
-#    dest: "{{apache_default_ServerRoot}}/{{item.apache_vhost_ErrorLog}}"
-#    content: ""
-#    force: no
     owner: "{{apache_default_User}}"
     group: "{{apache_default_Group}}"
     mode: 0644
@@ -68,10 +64,6 @@
   file:
     path: "{{apache_default_ServerRoot}}/{{item.apache_vhost_CustomLog}}"
     state: touch
-#  copy:
-#    dest: "{{apache_default_ServerRoot}}/{{item.apache_vhost_CustomLog}}"
-#    content: ""
-#    force: no
     owner: "{{apache_default_User}}"
     group: "{{apache_default_Group}}"
     mode: 0644
